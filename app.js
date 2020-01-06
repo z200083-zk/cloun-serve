@@ -33,7 +33,6 @@ router.post('/upload', async (ctx) => {
     console.log('上传');
     const file = ctx.request.files.userfile;	// 获取上传文件
     const reader = fs.createReadStream(file.path);	// 创建可读流
-    // const ext = file.name.split('.').pop(); // 获取上传文件扩展名
     let fileType = fileTypeFn(file.name);
     console.log(fileType);
     let filePath = path.join(__dirname, `public/${fileType}`) + `/${file.name}`;
@@ -42,6 +41,8 @@ router.post('/upload', async (ctx) => {
     return ctx.body = '上传成功';
 })
 
-app.listen(3001, () => {
-    console.log('koa is listening in 3001');
+let port = process.env.PORT || 20083
+
+app.listen(port, () => {
+    console.log('监听端口'+port);
 })
