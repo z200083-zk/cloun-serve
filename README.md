@@ -1,4 +1,6 @@
 # 个人云存储后端
 
-##node app.js
-运行
+## 运行
+node app.js
+### 自定义端口
+node app.js PORT=??? //???为自定义端口 默认端口20083
