@@ -12,12 +12,12 @@ const rd = require('rd')
 const app = new Koa()
 
 
-app.use(staticFiles(path.join(__dirname + '/public/')))
+app.use(staticFiles(path.join(__dirname + '/public/'))); // 静态资源服务
 app.use(cors()); // 跨域
 app.use(koaBody({
     multipart: true,  // 支持表单上传
     formidable: {
-        maxFileSize: 500 * 1024 * 1024, // 修改文件大小限制，默认位2M 当前为10M
+        maxFileSize: 500 * 1024 * 1024, // 修改文件大小限制，默认位2M 当前为500M
     }
 }))
 app.use(router.routes())
