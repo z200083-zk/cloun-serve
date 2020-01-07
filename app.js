@@ -6,22 +6,24 @@ const koaBody = require('koa-body');
 const router = require('koa-router')();
 const staticFiles = require('koa-static')
 
-const fileTypeFn = require('./views/rex'); //判断类型模块
-const rd = require('rd')
+const fileTypeFn = require('./views/rex'); // 判断类型
+const rd = require('rd'); // 文件遍历
 
 const app = new Koa()
 
 
 app.use(staticFiles(path.join(__dirname + '/public/'))); // 静态资源服务
 app.use(cors()); // 跨域
+
 app.use(koaBody({
     multipart: true,  // 支持表单上传
     formidable: {
         maxFileSize: 500 * 1024 * 1024, // 修改文件大小限制，默认位2M 当前为500M
     }
 }))
-app.use(router.routes())
-app.use(router.allowedMethods())
+
+app.use(router.routes());
+app.use(router.allowedMethods());
 
 
 // 上传
@@ -41,7 +43,7 @@ router.post('/serve/upload', async (ctx) => {
     reader.pipe(upStream);	// 可读流通过管道写入可写流
     console.log('上传成功');
 
-    return ctx.body = '上传成功';
+    ctx.body = '上传成功';
 })
 
 router.get('/serve/public', async (ctx) => {
