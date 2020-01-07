@@ -4,7 +4,9 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
-    "koa2-cors": "^2.0.6"
+    "koa-static": "^5.0.0",
+    "koa2-cors": "^2.0.6",
+    "rd": "^2.0.1"
   },
   "devDependencies": {
     "koa": "^2.11.0",
