@@ -1,9 +1,9 @@
+const fs = require('fs');
 const Koa = require('koa');
+const path = require('path');
+const cors = require('koa2-cors');
 const koaBody = require('koa-body');
 const router = require('koa-router')();
-const fs = require('fs');
-const cors = require('koa2-cors');
-const path = require('path');
 const staticFiles = require('koa-static')
 
 const fileTypeFn = require('./views/rex'); //判断类型模块
