@@ -11,9 +11,20 @@ const rd = require('rd'); // 文件遍历
 
 const app = new Koa()
 
+app.use(async (ctx, next) => {
+    if (/http:\/\/127.0.0.1:20083\/(video|image)\//.test(ctx.URL)) {
+        console.log(ctx.URL)
+        ctx.set({
+            'Content-Type': 'application/octet-stream',
+            'Content-Disposition': 'attachment; filename=' + ctx.query.cat
+        })
+    }
+    await next();
+})
 
 app.use(staticFiles(path.join(__dirname + '/public/'))); // 静态资源服务
 app.use(cors()); // 跨域
+
 
 app.use(koaBody({
     multipart: true,  // 支持表单上传
