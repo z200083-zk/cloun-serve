@@ -8,7 +8,7 @@ node app.js
 
 ### 问题记录
 
-#### koa2-cors 与 koa-statict 同时使用时顺序
+#### koa2-cors 与 koa-statict 同时使用时的顺序
 
 ```
 const Koa = require('koa');
