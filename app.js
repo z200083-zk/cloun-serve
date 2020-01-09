@@ -12,17 +12,41 @@ const rd = require('rd'); // 文件遍历
 const app = new Koa()
 
 app.use(async (ctx, next) => {
-    if (/http:\/\/127.0.0.1:20083\/(video|image)\//.test(ctx.URL)) {
-        console.log(ctx.URL)
-        ctx.set({
-            'Content-Type': 'application/octet-stream',
-            'Content-Disposition': 'attachment; filename=' + ctx.query.cat
-        })
+    // console.log(ctx.headers['user-agent'])
+    console.log(ctx.query.fileName);
+    let userAgent = (ctx.headers['user-agent'] || '').toLowerCase();
+    if (/\/public\/(video|image|audio)\//.test(ctx.URL.pathname)) {
+        if (ctx.query.fileName) {
+            // ctx.set({
+            //     'Content-Type': 'application/octet-stream',
+            //     'Content-Disposition': 'attachment; filename=' + ctx.query.cat
+            // })
+            if (userAgent.indexOf('msie') >= 0 || userAgent.indexOf('chrome') >= 0) {
+                ctx.set({
+                    'Content-Type': 'application/octet-stream',
+                    'Content-Disposition': 'attachment; filename=' + encodeURIComponent(ctx.query.fileName)
+                })
+                console.log(1)
+            } else if (userAgent.indexOf('firefox') >= 0) {
+                ctx.set({
+                    'Content-Type': 'application/octet-stream',
+                    'Content-Disposition': 'attachment; filename*="utf8\'\'' + encodeURIComponent(ctx.query.fileName) + '"'
+                })
+                console.log(2)
+            } else {
+                /* safari等其他非主流浏览器只能自求多福了 */
+                ctx.set({
+                    'Content-Type': 'application/octet-stream',
+                    'Content-Disposition': 'attachment; filename=' + new Buffer(ctx.query.fileName).toString('binary')
+                })
+                console.log(3)
+            }
+        }
     }
     await next();
 })
 
-app.use(staticFiles(path.join(__dirname + '/public/'))); // 静态资源服务
+app.use(staticFiles(path.join(__dirname))); // 静态资源服务
 app.use(cors()); // 跨域
 
 
