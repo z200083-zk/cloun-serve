@@ -12,41 +12,32 @@ const rd = require('rd'); // 文件遍历
 const app = new Koa()
 
 app.use(async (ctx, next) => {
-    // console.log(ctx.headers['user-agent'])
-    console.log(ctx.query.fileName);
     let userAgent = (ctx.headers['user-agent'] || '').toLowerCase();
-    if (/\/public\/(video|image|audio)\//.test(ctx.URL.pathname)) {
+
+    if (/\/media\/(video|image|audio|other|text|compress)\//.test(ctx.URL.pathname)) {
         if (ctx.query.fileName) {
-            // ctx.set({
-            //     'Content-Type': 'application/octet-stream',
-            //     'Content-Disposition': 'attachment; filename=' + ctx.query.cat
-            // })
             if (userAgent.indexOf('msie') >= 0 || userAgent.indexOf('chrome') >= 0) {
                 ctx.set({
                     'Content-Type': 'application/octet-stream',
                     'Content-Disposition': 'attachment; filename=' + encodeURIComponent(ctx.query.fileName)
                 })
-                console.log(1)
             } else if (userAgent.indexOf('firefox') >= 0) {
                 ctx.set({
                     'Content-Type': 'application/octet-stream',
                     'Content-Disposition': 'attachment; filename*="utf8\'\'' + encodeURIComponent(ctx.query.fileName) + '"'
                 })
-                console.log(2)
             } else {
-                /* safari等其他非主流浏览器只能自求多福了 */
                 ctx.set({
                     'Content-Type': 'application/octet-stream',
                     'Content-Disposition': 'attachment; filename=' + new Buffer(ctx.query.fileName).toString('binary')
                 })
-                console.log(3)
             }
         }
     }
     await next();
 })
 
-app.use(staticFiles(path.join(__dirname))); // 静态资源服务
+app.use(staticFiles(path.join(__dirname,'/public'))); // 静态资源服务
 app.use(cors()); // 跨域
 
 
@@ -60,34 +51,34 @@ app.use(koaBody({
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-
 // 上传
 router.post('/serve/upload', async (ctx) => {
-    console.log('上传');
-
     const file = ctx.request.files.userfile;	// 获取上传文件
     const reader = fs.createReadStream(file.path);	// 创建可读流
     let fileType = fileTypeFn(file.name); // 判断类型
-    console.log('类型' + fileType);
-
-    let filePath = path.join(__dirname, `public/${fileType}`); // 根据类型生成对应目录
+    let filePath = path.join(__dirname, `public/media/${fileType}`); // 根据类型生成对应目录
     if (!fs.existsSync(filePath)) {
         fs.mkdirSync(filePath); // 判断文件夹不存在并创建
     }
     const upStream = fs.createWriteStream(filePath + `/${file.name}`); // 创建可写流
     reader.pipe(upStream);	// 可读流通过管道写入可写流
-    console.log('上传成功');
 
     ctx.body = '上传成功';
 })
 
+
+// 文件遍历查询
 router.get('/serve/public', async (ctx) => {
     let resList = [];
-    rd.eachFileSync(`public/${ctx.query.cat}`, function (f, s) {
-        let fileName = f.split(__dirname + `\\public\\${ctx.query.cat}\\`)[1];
+    rd.eachFileSync(`public/media/${ctx.query.cat}`, function (f, s) {
+        let fileName = f.split(__dirname + `/public/media/${ctx.query.cat}/`)[1];
         resList.push({ fileName, path: f, details: s });
     });
-    ctx.body = resList;
+    if(resList.length === 0){
+        ctx.body = [];
+    }else{
+        ctx.body = resList;
+    }
 })
 
 
