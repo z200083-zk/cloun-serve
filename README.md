@@ -1,14 +1,14 @@
-# 个人云存储后端
+# 云盘后端
 
 ## 运行
 
 ```
-node app.js
+node app
 ```
 
 ### 问题记录
 
-#### koa2-cors 与 koa-statict 同时使用时顺序
+#### koa2-cors 与 koa-statict 同时使用时的顺序
 
 ```
 const Koa = require('koa');
