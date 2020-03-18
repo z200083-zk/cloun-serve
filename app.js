@@ -6,11 +6,60 @@ const koaBody = require('koa-body');
 const router = require('koa-router')();
 const staticFiles = require('koa-static')
 
+// 数据库
+const Sequelize = require('sequelize');
+const config = require('./routes/serve');
+const jwt = require('jsonwebtoken');
+const { createToken, decodeToken } = require('./routes/token');
+
 const fileTypeFn = require('./views/rex'); // 判断类型
 const rd = require('rd'); // 文件遍历
 
+
+const sequelize = new Sequelize(config.database, config.username, config.password, {
+    host: config.host,
+    dialect: 'mysql',
+    pool: {
+        max: 5,
+        min: 0,
+        idle: 30000
+    }
+});
+
+sequelize
+    .authenticate()
+    .then(() => {
+        console.log('数据库连接成功')
+    })
+    .catch(err => {
+        console.log('数据库连接失败', err)
+    })
+
+const UserModel = sequelize.define('user', {
+    Id: {
+        type: Sequelize.INTEGER(11),
+        primaryKey: true,            // 主键
+        autoIncrement: true,         // 自动递增
+    },
+    Username: Sequelize.STRING(100),
+    Password: Sequelize.STRING(100),
+    Email: Sequelize.STRING(100),
+    Time: Sequelize.BIGINT,
+}, {
+    timestamps: false
+})
+
+UserModel.sync({ force: false })
+
+const Op = Sequelize.Op;
+
 const app = new Koa()
 
+// app.use(async (ctx,next)=>{
+//     if()
+// })
+
+// 下载
 app.use(async (ctx, next) => {
     let userAgent = (ctx.headers['user-agent'] || '').toLowerCase();
 
@@ -37,10 +86,11 @@ app.use(async (ctx, next) => {
     await next();
 })
 
-app.use(staticFiles(path.join(__dirname,'/public'))); // 静态资源服务
+// 静态资源服务
+app.use(staticFiles(path.join(__dirname, '/public')));
 app.use(cors()); // 跨域
 
-
+// 文件上传
 app.use(koaBody({
     multipart: true,  // 支持表单上传
     formidable: {
@@ -74,14 +124,45 @@ router.get('/serve/public', async (ctx) => {
         let fileName = f.split(__dirname + `/public/media/${ctx.query.cat}/`)[1];
         resList.push({ fileName, path: f, details: s });
     });
-    if(resList.length === 0){
+    if (resList.length === 0) {
         ctx.body = [];
-    }else{
+    } else {
         ctx.body = resList;
     }
 })
 
+// 登录
+router.post("/login", async (ctx) => {
+    let { username, password } = ctx.request.body;
+    await UserModel.findAll({
+        raw: true, where: {
+            [Op.or]: [
+                {
+                    username: {
+                        [Op.like]: username
+                    }
+                },
+                {
+                    email: {
+                        [Op.like]: username
+                    }
+                }
+            ],
+            password: password
+        }
+    }).then(notes => {
+        if (notes.length == 0) {
+            ctx.body = {
+                code: 400,
+                msg: '用户不存在或密码错误'
+            }
+            return
+        }
+        let token = createToken(notes[0]);
+        ctx.body = { code: 200,token, msg: '登录成功' }
 
+    })
+})
 
 
 // 获取命令行参数
